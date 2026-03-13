@@ -72,6 +72,12 @@ npm run dev
 5. Use webhook URL in Lava settings:
    - `https://<your-project>.vercel.app/api/webhooks/lava`
 
+### If API returns HTML/404 instead of JSON on Vercel
+
+- Disable `Deployment Protection` (Vercel Authentication / Password).
+- Verify `Root Directory` points to repo root where `api/` folder exists.
+- Clear custom `Output Directory` if set (it can disable serverless `api/*` routes).
+
 ## Security note
 
 Do not expose your Lava API key in frontend code. This app keeps it server-side in `.env`.

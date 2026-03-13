@@ -41,6 +41,11 @@ function isVercelAuthHtml(text) {
   return typeof text === "string" && text.includes("Vercel Authentication");
 }
 
+function isVercelNotFoundHtml(text) {
+  if (typeof text !== "string") return false;
+  return text.includes("The page could not be found") || text.includes("404: NOT_FOUND");
+}
+
 async function refreshWebhookEvents() {
   webhookEventsEl.textContent = "Loading webhook events...";
 
@@ -52,6 +57,12 @@ async function refreshWebhookEvents() {
       if (isVercelAuthHtml(parsed.raw)) {
         webhookEventsEl.textContent =
           "Vercel Deployment Protection is enabled. Disable Vercel Authentication / Password Protection for this deployment to allow API + webhook JSON responses.";
+        return;
+      }
+
+      if (isVercelNotFoundHtml(parsed.raw)) {
+        webhookEventsEl.textContent =
+          "Vercel API route not found (404). Check project settings: Root Directory must point to this repo root, and clear custom Output Directory/Build settings that disable /api functions.";
         return;
       }
 
@@ -109,6 +120,14 @@ checkoutForm.addEventListener("submit", async (event) => {
         return;
       }
 
+      if (isVercelNotFoundHtml(parsed.raw)) {
+        setResult(
+          "API route not found on Vercel (404). Check Vercel project Root Directory and remove custom Output Directory/Build settings.",
+          "error",
+        );
+        return;
+      }
+
       setResult(`Unexpected non-JSON response (HTTP ${response.status}).`, "error");
       return;
     }
@@ -149,6 +168,11 @@ testWebhookBtn.addEventListener("click", async () => {
     if (!parsed.isJson) {
       if (isVercelAuthHtml(parsed.raw)) {
         alert("Vercel protection blocks /api/webhooks/test. Disable deployment protection.");
+        return;
+      }
+
+      if (isVercelNotFoundHtml(parsed.raw)) {
+        alert("API route not found on Vercel (404). Check project Root Directory and Output Directory settings.");
         return;
       }
 
