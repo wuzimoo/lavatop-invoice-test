@@ -3,94 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lava Subscription Checkout</title>
+    <title>Lava Monthly Checkout</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <main class="layout">
+    <main class="shell">
       <section class="card">
-        <p class="eyebrow">Checkout</p>
-        <h1>Premium Monthly Subscription</h1>
-        <p class="subtitle">One-page checkout demo that creates a Lava invoice and redirects to `paymentUrl`.</p>
-
-        <ul class="plan-points">
-          <li>Access to all premium content</li>
-          <li>Monthly recurring billing</li>
-          <li>Secure payment widget powered by Lava</li>
-        </ul>
+        <p class="badge">MVP Checkout</p>
+        <h1>Monthly Subscription</h1>
+        <p class="caption">Fixed billing cycle: every 1 month</p>
 
         <form id="checkout-form" class="form">
           <label>
-            Buyer email
-            <input id="email" type="email" placeholder="buyer@example.com" required />
+            Email
+            <input id="email" type="email" placeholder="you@email.com" required />
           </label>
 
           <label>
-            Lava offer ID (subscription offer)
-            <input id="offerId" type="text" placeholder="836b9fc5-7ae9-4a27-9642-592bc44072b7" required />
+            Payment provider
+            <select id="paymentProvider">
+              <option value="">Auto (recommended)</option>
+              <option value="UNLIMINT">UNLIMINT</option>
+              <option value="STRIPE">STRIPE</option>
+              <option value="PAYPAL">PAYPAL</option>
+              <option value="SMART_GLOCAL">SMART_GLOCAL</option>
+              <option value="PAY2ME">PAY2ME</option>
+            </select>
           </label>
 
-          <div class="grid-2">
-            <label>
-              Currency
-              <select id="currency">
-                <option value="USD" selected>USD</option>
-                <option value="EUR">EUR</option>
-                <option value="RUB">RUB</option>
-              </select>
-            </label>
-
-            <label>
-              Periodicity
-              <select id="periodicity">
-                <option value="MONTHLY" selected>MONTHLY</option>
-                <option value="PERIOD_90_DAYS">PERIOD_90_DAYS</option>
-                <option value="PERIOD_180_DAYS">PERIOD_180_DAYS</option>
-                <option value="PERIOD_YEAR">PERIOD_YEAR</option>
-                <option value="ONE_TIME">ONE_TIME</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="grid-2">
-            <label>
-              Payment provider (optional)
-              <select id="paymentProvider">
-                <option value="">Auto</option>
-                <option value="UNLIMINT">UNLIMINT</option>
-                <option value="STRIPE">STRIPE</option>
-                <option value="PAYPAL">PAYPAL</option>
-                <option value="SMART_GLOCAL">SMART_GLOCAL</option>
-                <option value="PAY2ME">PAY2ME</option>
-              </select>
-            </label>
-
-            <label>
-              Payment method (optional)
-              <select id="paymentMethod">
-                <option value="">Auto</option>
-                <option value="CARD">CARD</option>
-                <option value="SBP">SBP</option>
-                <option value="PIX">PIX</option>
-                <option value="PAYPAL">PAYPAL</option>
-                <option value="STRIPE">STRIPE</option>
-              </select>
-            </label>
-          </div>
-
-          <button id="pay-btn" type="submit">Pay Subscription</button>
+          <button id="pay-btn" type="submit">Pay Monthly</button>
         </form>
 
         <p id="checkout-result" class="result" aria-live="polite"></p>
       </section>
 
-      <section class="card webhook-card">
-        <p class="eyebrow">Webhook</p>
-        <h2>Test Receiver</h2>
-        <p class="subtitle">Configure Lava webhook URL to: <code id="webhook-url"></code></p>
-        <div class="webhook-actions">
-          <button id="test-webhook-btn" type="button">Send local test webhook</button>
-          <button id="refresh-webhooks-btn" type="button" class="secondary">Refresh recent events</button>
+      <section class="card card-small">
+        <h2>Webhook</h2>
+        <p class="caption">URL for Lava: <code id="webhook-url"></code></p>
+        <div class="row">
+          <button id="test-webhook-btn" type="button" class="secondary">Send test event</button>
+          <button id="refresh-webhooks-btn" type="button" class="ghost">Refresh</button>
         </div>
         <pre id="webhook-events">No webhook events yet.</pre>
       </section>

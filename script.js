@@ -18,13 +18,48 @@ function valueOrNull(id) {
   return value.length > 0 ? value : null;
 }
 
+async function parseResponse(response) {
+  const contentType = response.headers.get("content-type") || "";
+  const raw = await response.text();
+
+  if (contentType.includes("application/json")) {
+    try {
+      return { raw, json: JSON.parse(raw), isJson: true };
+    } catch {
+      return { raw, json: null, isJson: false };
+    }
+  }
+
+  try {
+    return { raw, json: JSON.parse(raw), isJson: true };
+  } catch {
+    return { raw, json: null, isJson: false };
+  }
+}
+
+function isVercelAuthHtml(text) {
+  return typeof text === "string" && text.includes("Vercel Authentication");
+}
+
 async function refreshWebhookEvents() {
   webhookEventsEl.textContent = "Loading webhook events...";
 
   try {
-    const response = await fetch("/api/webhooks/recent");
-    const data = await response.json();
+    const response = await fetch("/api/webhooks/recent", { credentials: "same-origin" });
+    const parsed = await parseResponse(response);
 
+    if (!parsed.isJson) {
+      if (isVercelAuthHtml(parsed.raw)) {
+        webhookEventsEl.textContent =
+          "Vercel Deployment Protection is enabled. Disable Vercel Authentication / Password Protection for this deployment to allow API + webhook JSON responses.";
+        return;
+      }
+
+      webhookEventsEl.textContent = `Unexpected non-JSON response (HTTP ${response.status}).`;
+      return;
+    }
+
+    const data = parsed.json;
     if (!response.ok) {
       webhookEventsEl.textContent = JSON.stringify(data, null, 2);
       return;
@@ -44,16 +79,13 @@ async function refreshWebhookEvents() {
 checkoutForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   payBtn.disabled = true;
-  setResult("Creating Lava checkout...");
+  setResult("Creating monthly checkout...");
 
   try {
     const payload = {
       email: valueOrNull("email"),
-      offerId: valueOrNull("offerId"),
-      currency: valueOrNull("currency") || "USD",
-      periodicity: valueOrNull("periodicity") || "MONTHLY",
       paymentProvider: valueOrNull("paymentProvider"),
-      paymentMethod: valueOrNull("paymentMethod"),
+      periodicity: "MONTHLY",
       buyerLanguage: "EN",
     };
 
@@ -62,14 +94,29 @@ checkoutForm.addEventListener("submit", async (event) => {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "same-origin",
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
+    const parsed = await parseResponse(response);
 
+    if (!parsed.isJson) {
+      if (isVercelAuthHtml(parsed.raw)) {
+        setResult(
+          "Vercel Deployment Protection is enabled. Disable protection for this project so checkout API can return JSON.",
+          "error",
+        );
+        return;
+      }
+
+      setResult(`Unexpected non-JSON response (HTTP ${response.status}).`, "error");
+      return;
+    }
+
+    const data = parsed.json;
     if (!response.ok) {
       const message = data?.error || "Checkout creation failed";
-      setResult(`${message}. See console for details.`, "error");
+      setResult(message, "error");
       console.error("Lava checkout error:", data);
       return;
     }
@@ -78,12 +125,12 @@ checkoutForm.addEventListener("submit", async (event) => {
     const contractId = data?.checkout?.contractId || "n/a";
 
     if (!paymentUrl) {
-      setResult(`Invoice created (contract ${contractId}) but no payment URL returned.`, "error");
+      setResult(`Invoice created (${contractId}) but payment URL is empty.`, "error");
       console.log("Lava response", data);
       return;
     }
 
-    setResult(`Invoice created (${contractId}). Redirecting to Lava payment page...`, "success");
+    setResult(`Invoice ready. Redirecting to payment...`, "success");
     window.location.href = paymentUrl;
   } catch (error) {
     setResult(`Unexpected error: ${error.message}`, "error");
@@ -96,11 +143,21 @@ testWebhookBtn.addEventListener("click", async () => {
   testWebhookBtn.disabled = true;
 
   try {
-    const response = await fetch("/api/webhooks/test", { method: "POST" });
-    const data = await response.json();
+    const response = await fetch("/api/webhooks/test", { method: "POST", credentials: "same-origin" });
+    const parsed = await parseResponse(response);
+
+    if (!parsed.isJson) {
+      if (isVercelAuthHtml(parsed.raw)) {
+        alert("Vercel protection blocks /api/webhooks/test. Disable deployment protection.");
+        return;
+      }
+
+      alert(`Test webhook failed with non-JSON response (HTTP ${response.status})`);
+      return;
+    }
 
     if (!response.ok) {
-      alert(`Failed to send test webhook: ${JSON.stringify(data)}`);
+      alert(`Failed to send test webhook: ${JSON.stringify(parsed.json)}`);
       return;
     }
 

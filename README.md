@@ -1,6 +1,7 @@
 # Lava Checkout 1-Page Demo
 
 Single-page checkout with a subscription-style pay button, integrated with Lava invoice API and a webhook receiver for tests.
+UI is simplified for mobile MVP: email + provider + one `Pay Monthly` button.
 
 ## What this uses from Lava docs
 
@@ -25,6 +26,10 @@ npm install
 cp .env.example .env
 ```
 
+Required variables:
+- `LAVA_API_KEY`
+- `LAVA_OFFER_ID` (your monthly offer id in Lava)
+
 3. Start app:
 
 ```bash
@@ -38,10 +43,10 @@ npm run dev
 ## Checkout flow
 
 1. Enter buyer email.
-2. Enter `offerId` of your Lava subscription/product offer.
-3. Click **Pay Subscription**.
+2. Select payment provider (or leave Auto).
+3. Click **Pay Monthly**.
 4. App calls your backend endpoint `/api/checkout/create-subscription`.
-5. Backend calls Lava `POST https://gate.lava.top/api/v3/invoice` and returns `paymentUrl`.
+5. Backend calls Lava `POST https://gate.lava.top/api/v3/invoice` with fixed periodicity `MONTHLY` and returns `paymentUrl`.
 6. Browser redirects to Lava checkout widget.
 
 ## Webhook test flow
@@ -55,11 +60,16 @@ npm run dev
 1. Push this repository to GitHub.
 2. In Vercel project settings, set environment variables:
    - `LAVA_API_KEY`
+   - `LAVA_OFFER_ID`
    - `LAVA_API_BASE` (optional, default `https://gate.lava.top`)
+   - `LAVA_DEFAULT_CURRENCY` (optional, default `USD`)
    - `LAVA_WEBHOOK_API_KEY` (optional)
    - `LAVA_WEBHOOK_BASIC_USER` / `LAVA_WEBHOOK_BASIC_PASS` (optional)
-3. Trigger deployment (or wait for auto-deploy on push).
-4. Use webhook URL in Lava settings:
+3. In Vercel, disable deployment protection for testing/webhooks:
+   - `Project -> Settings -> Deployment Protection`
+   - Turn off `Vercel Authentication` / Password protection for this deployment
+4. Trigger deployment (or wait for auto-deploy on push).
+5. Use webhook URL in Lava settings:
    - `https://<your-project>.vercel.app/api/webhooks/lava`
 
 ## Security note

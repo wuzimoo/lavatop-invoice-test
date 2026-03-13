@@ -12,6 +12,8 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.join(__dirname, "..");
 
 const LAVA_API_BASE = process.env.LAVA_API_BASE || "https://gate.lava.top";
+const DEFAULT_CURRENCY = process.env.LAVA_DEFAULT_CURRENCY || "USD";
+const DEFAULT_PERIODICITY = "MONTHLY";
 const webhookEvents = [];
 const MAX_WEBHOOK_EVENTS = 50;
 
@@ -138,9 +140,9 @@ app.post("/api/checkout/create-subscription", async (req, res) => {
 
   const body = req.body || {};
   const email = trimOrNull(body.email);
-  const offerId = trimOrNull(body.offerId);
-  const currency = trimOrNull(body.currency) || "USD";
-  const periodicity = trimOrNull(body.periodicity) || "MONTHLY";
+  const offerId = trimOrNull(body.offerId) || trimOrNull(process.env.LAVA_OFFER_ID);
+  const currency = trimOrNull(body.currency) || DEFAULT_CURRENCY;
+  const periodicity = DEFAULT_PERIODICITY;
   const buyerLanguage = trimOrNull(body.buyerLanguage) || "EN";
   const paymentProvider = trimOrNull(body.paymentProvider);
   const paymentMethod = trimOrNull(body.paymentMethod);
@@ -151,7 +153,10 @@ app.post("/api/checkout/create-subscription", async (req, res) => {
   }
 
   if (!offerId) {
-    res.status(400).json({ error: "offerId is required" });
+    res.status(400).json({
+      error: "Missing offerId",
+      message: "Set LAVA_OFFER_ID in environment or pass offerId in request body",
+    });
     return;
   }
 
