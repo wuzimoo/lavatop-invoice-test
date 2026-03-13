@@ -134,8 +134,16 @@ checkoutForm.addEventListener("submit", async (event) => {
 
     const data = parsed.json;
     if (!response.ok) {
-      const message = data?.error || "Checkout creation failed";
-      setResult(message, "error");
+      const lavaError = data?.lavaResponse?.error;
+      if (lavaError === "Incorrect email to purchase") {
+        setResult(
+          "This buyer email is rejected by Lava. Use another email (for Gmail, try alias like yourname+test@gmail.com).",
+          "error",
+        );
+      } else {
+        const message = lavaError || data?.error || "Checkout creation failed";
+        setResult(message, "error");
+      }
       console.error("Lava checkout error:", data);
       return;
     }
