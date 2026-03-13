@@ -133,7 +133,8 @@ app.post("/api/checkout/create-subscription", async (req, res) => {
   if (!lavaApiKey) {
     res.status(500).json({
       error: "Missing LAVA_API_KEY",
-      message: "Set LAVA_API_KEY in environment variables before creating an invoice",
+      message:
+        "Set LAVA_API_KEY in environment variables before creating an invoice. On Vercel, local .env is ignored: add it in Project Settings -> Environment Variables and redeploy.",
     });
     return;
   }
@@ -221,7 +222,13 @@ app.post("/api/webhooks/lava", webhookHandler);
 app.post("/webhooks/lava", webhookHandler);
 
 app.get("/api/webhooks/recent", (_req, res) => {
-  res.json({ ok: true, total: webhookEvents.length, items: webhookEvents });
+  res.json({
+    ok: true,
+    total: webhookEvents.length,
+    items: webhookEvents,
+    note:
+      "Events are stored in-memory only. On Vercel serverless they are ephemeral and may reset between requests.",
+  });
 });
 
 app.post("/api/webhooks/test", (_req, res) => {

@@ -185,7 +185,19 @@ testWebhookBtn.addEventListener("click", async () => {
       return;
     }
 
-    await refreshWebhookEvents();
+    const event = parsed.json?.event;
+    if (event) {
+      webhookEventsEl.textContent = JSON.stringify(
+        {
+          note: "Latest test event (rendered from immediate response).",
+          event,
+        },
+        null,
+        2,
+      );
+    } else {
+      await refreshWebhookEvents();
+    }
   } catch (error) {
     alert(`Failed to send test webhook: ${error.message}`);
   } finally {
